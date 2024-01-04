@@ -297,7 +297,7 @@ select * from emp;
 select * from dept;
 select * from emp, dept;-- 적절치 못한 조인방법
 -- 내부 조인(inner join)
--- 조인하려는 두테이브에 공통 컬럼이 존재해야 함 
+-- 조인하려는 두 테이블에 공통 컬럼이 존재해야 함 
 select*from emp, dept where emp.deptno = dept.deptno;
 -- 테이블 이름을 줄여서 사용
 select*from emp e, dept d where e.deptno = d.deptno;
@@ -305,13 +305,226 @@ select*from emp e, dept d where e.deptno = d.deptno;
 -- deptno 컬럼은 두테이블에 모두 있기 때문에 ambigiuous 에러
 select empno, ename, job, deptno, dname, loc 
 	from emp e, dept d where e.deptno = d.deptno;
-
+-- 에러 수정
 select e.empno, e.ename, e.job, e.deptno, d.dname, d.loc 
 	from emp e, dept d where e.deptno = d.deptno;
+
 -- emp 테이블 전체 조회
 select e.* from emp e, dept d where e.deptno = d.deptno;
+
+-- 연습
 -- emp, dept를 조인하여 empno,ename, deptno, dname, loc 조회
 -- (단, 급여가 2500 이상인 사원만 조회하고, 조회 결과는 사원이름 기준으로 오름차순 정렬)
 select e.empno, e.ename, e.job, e.deptno, d.dname, d.loc 
 	from emp e, dept d where e.deptno = d.deptno and e.sal >= 2500
 		order by e.ename asc;
+        
+-- 서브쿼리(sub query)
+-- 하나의 쿼리문 안에서 다른 쿼리문을 수행하는 것 
+-- 최저 급여를 받는 사원의 이름 
+select * from emp;
+-- 1. 최저급여가 얼마인지; => 800
+select min(sal) from emp;
+-- 2. 800 급여를 받는 사원이 이름 => smith
+select ename from emp where sal=800;
+-- 위의 두 문장을 서브쿼리로 
+select ename from emp where sal=(select min(sal) from emp);
+-- 최고 급여를 받는 사원의 정보 조회
+select * from emp where sal = (select max(sal) from emp);
+-- allen 보다 높은 급여를 받는 사원 조회 
+select ename from emp where sal > (select sal from emp where ename = 'allen');
+
+/*
+	연습문제 
+    1. clark 보다 늦게 입사한 사원 조회 
+    2. 부서번호가 20인 사원 중에서 전체 사원 평균 급여보다 높은 급여를 받는 사원 조회 
+    3. 2번 조회 결과에서 부서이름, 부서위치도 함께 조회 
+    4. martin과 같은 부서 사원 중에서 전체 사원 평균 급여보다 높은 급여를 받는 사원 조회 
+*/
+-- 1. clark 보다 늦게 입사한 사원 조회 
+select * 
+	from emp 
+		where hiredate > (select hiredate from emp where ename = 'clark' );
+-- 2. 부서번호가 20인 사원 중에서 전체 사원 평균 급여보다 높은 급여를 받는 사원 조회 
+select ename 
+	from emp 
+		where deptno = 20 
+			and sal > (select avg(sal) from emp);
+-- 3. 2번 조회 결과에서 부서이름, 부서위치도 함께 조회 
+select *
+	from emp e, dept d 
+		where e.deptno=d.deptno
+			and e.deptno = 20 
+				and e.sal > (select avg(sal) from emp);
+-- 4. martin과 같은 부서 사원 중에서 전체 사원 평균 급여보다 높은 급여를 받는 사원 조회 
+select *
+	from emp 
+		where deptno = (select deptno from emp where ename = 'martin') 
+			and sal > (select avg(sal) from emp);
+            
+-- 제약조건 
+-- id, member_email, member_password 컬럼이 있는 테이블
+drop table if exists member1;
+create table member1(
+	id bigint,
+    member_email varchar(20),
+    member_password varchar(20)
+);
+select * from member1;
+-- 기본 입력시 모든 컬럼과 모든 값입력
+insert into member1(id, member_email, member_password)values(1,'aa@aa.com','1234');
+-- 모든 컬럼에 값을 다 넣을 때는 컬럼이름 생략가능
+insert into member1 values(2,'bb@bb.com','1234');
+insert into member1 values(3,'cc@cc.com','1234');
+-- 특정 컬럼만 값을 넣을 때는
+insert into member1(id,member_email) values(3, 'cc@cc.com');
+-- 조건이 안들어 가있으니깐 null값 가능
+insert into member1 values(4, 'dd@dd.com',null );
+
+-- not null
+drop table if exists member2;
+create table member2(
+	id bigint not null,
+    member_email varchar(20),
+    member_password varchar(20)
+);
+select*from member2;
+insert into member2(id, member_email, member_password)values(1,'aa@aa.com','1234');
+-- id를 제외하고 나머지 값만 입력
+-- id값이 안들어오니깐 에러가 걸린다.
+insert into member2(id, member_email, member_password)values('aa@aa.com','1234');
+-- id값에 null값이 들어갈수도 없다.
+insert into member2(id, member_email, member_password)values(null,'aa@aa.com','1234');
+-- 이메일에는 제약이 없기 때문에 에러가 안뜬다.
+insert into member2(id, member_email, member_password)values(4,null,'1234');
+
+drop table if exists member3;
+create table member3(
+	id bigint not null unique, -- unique는 값이 하나만 있어야하는 곳에 씀
+    member_email varchar(20) not null,
+    member_password varchar(20) not null -- not null은 데이터가 무조건 써야할대 씀
+);
+insert into member3(id, member_email, member_password)values(1,'aa@aa.com','1234');
+-- id값이 같기 때문에 에러 발생
+insert into member3(id, member_email, member_password)values(1,'aa@aa.com','1234');
+-- 비밀번호 값이 null값으로 지정되어서 에러 발생
+insert into member3(id, member_email, member_password)values(2,'aa@aa.com',null);
+
+-- unique
+drop table if exists member4;
+create table member4(
+	id bigint not null unique, -- unique는 값이 하나만 있어야하는 곳에 씀
+    member_email varchar(20) not null unique,
+    member_password varchar(20) not null, -- not null은 데이터가 무조건 써야할대 씀
+    created_at datetime
+);
+select * from member4;
+insert into member4(id, member_email, member_password, created_at)
+		values(1,'aa@aa.com','1234',now());
+insert into member4(id, member_email, member_password, created_at)
+		values(2,'aa@aa.com','1234');
+
+drop table if exists member5;	
+create table member5(
+	id bigint not null unique, -- unique는 값이 하나만 있어야하는 곳에 씀
+    member_email varchar(20) not null unique,
+    member_password varchar(20) not null, -- not null은 데이터가 무조건 써야할대 씀
+    created_at datetime default now() -- datetime 형식 default now 컬럼작성시 now() 자동 생성
+);
+select * from member5;
+insert into member5(id, member_email, member_password, created_at)
+		values(1,'aa@aa.com','1234',now());
+insert into member5(id, member_email, member_password)
+		values(2,'aa@aa.com','1234');
+        
+-- primary key
+drop table if exists member6;	
+create table member6(
+	id bigint primary key, -- unique는 값이 하나만 있어야하는 곳에 씀
+    member_email varchar(20) not null unique,
+    member_password varchar(20) not null, -- not null은 데이터가 무조건 써야할대 씀
+    created_at datetime default now() -- datetime 형식 default now 컬럼작성시 now() 자동 생성
+);
+select * from member6;
+insert into member6(id, member_email, member_password)
+		values(1,'aa@aa.com','1234');
+-- 값이 겹치거나 비어있으면 에가 발생
+insert into member6(id, member_email, member_password)
+		values(1,'aa@aa.com','1234'); -- x
+-- 값이 겹치거나 비어있으면 에가 발생
+insert into member6(id, member_email, member_password)
+		values('aa@aa.com','1234'); -- x
+-- 에러 해결
+insert into member6(id, member_email, member_password)
+		values(2,'aa@aa.com','1234');
+
+drop table if exists member7;	
+create table member7(
+	id bigint, -- unique는 값이 하나만 있어야하는 곳에 씀
+    member_email varchar(20) not null unique,
+    member_password varchar(20) not null, -- not null은 데이터가 무조건 써야할대 씀
+    created_at datetime default now(), -- datetime 형식 default now 컬럼작성시 now() 자동 생성
+    constraint pk_member7 primary key(id) -- id 에 primary key 를 적용
+);
+drop table if exists member7;
+
+-- 자동 번호 적용하기 (auto_increment 는 pk 컬럼에만 적용가능)
+drop table if exists member8;	
+create table member8(
+	id bigint auto_increment, -- auto_increment 자동으로 id값이 증가함
+    member_email varchar(20) not null unique, -- unique는 값이 하나만 있어야하는 곳에 씀
+    member_password varchar(20) not null, -- not null은 데이터가 무조건 써야할대 씀
+    created_at datetime default now(), -- datetime 형식... default 컬럼작성시 now() 자동 생성
+    -- id2 bigint auto_increment, -- 일반 컬럼에는 지정 불가
+    constraint pk_member8 primary key(id) -- id 에 primary key 를 적용
+);
+select * from member8;
+-- auto_increment 를 지정하면 값을 따로 주지 않아도 된다
+insert into member6(member_email, member_password) values('aa@aa.com','1234');
+insert into member6(member_email, member_password) values('bb@bb.com','1234');
+
+
+
+-- ----------------------------
+-- 참조관계 
+drop table parent1;
+create table parent1(
+	id bigint primary key,
+    p1 varchar (10),
+    p2 varchar (20)
+);
+
+drop table child1;
+create table child1(
+	id bigint primary key,
+    c1 varchar (10),
+    c2 varchar (20),
+    p_id bigint, -- 참조할 컬럼 
+    -- 외래키 지정 (P_id 컬럼을 parent1 테이블의 id 컬럼을 참조하도록함)
+    constraint fk_child1 foreign key(p_id) references parent1(id)
+);
+
+insert into parent1(id,p1,p2) values(1,'aa','aa');
+insert into parent1(id,p1,p2) values(2,'bb','bb');
+insert into parent1(id,p1,p2) values(3,'cc','cc');
+insert into parent1(id,p1,p2) values(4,'dd','dd');
+select * from parent1;
+
+-- 부모가 가지고 있는 값이 아닐경우 에러발생...예) id 값이 1,2,3 이 아닐경우
+insert child1(id, c1, c2, p_id) values(1,'aaa','aaa',1);
+-- 부모 id 컬럼에 없는 값을 P-id에 저장 
+insert child1(id, c1, c2, p_id) values(2,'bbb','bbb',2);
+insert child1(id, c1, c2, p_id) values(3,'ccc','ccc',3); 
+
+-- 부모테이블의 데이터 삭제 
+-- id=2인 데이터 한줄을 삭제
+-- 자식테이블에 id=2인 데이터를 참조하는 부분이 있기 때문에 삭제 불가
+delete from parent1 where id = 2; -- 특정한줄 삭제할때 사용
+-- 자식테이블에 id=4 인 데이터를 참조하는 부분이 없기 때문에 삭제가능
+delete from parent1 where id = 4;
+-- 자식테이블의 부모 id=2를 참조하는 데이터 삭제 
+delete from child1 where id = 2;
+
+
+
+
