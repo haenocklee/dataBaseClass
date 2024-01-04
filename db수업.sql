@@ -362,6 +362,8 @@ select *
 		where deptno = (select deptno from emp where ename = 'martin') 
 			and sal > (select avg(sal) from emp);
             
+-- -----------------------
+-- insert
 -- 제약조건 
 -- id, member_email, member_password 컬럼이 있는 테이블
 drop table if exists member1;
@@ -480,8 +482,8 @@ create table member8(
 );
 select * from member8;
 -- auto_increment 를 지정하면 값을 따로 주지 않아도 된다
-insert into member6(member_email, member_password) values('aa@aa.com','1234');
-insert into member6(member_email, member_password) values('bb@bb.com','1234');
+insert into member8(member_email, member_password) values('aa@aa.com','1234');
+insert into member8(member_email, member_password) values('bb@bb.com','1234');
 
 
 
@@ -602,3 +604,69 @@ select * from child3;
 -- update child3 set c1='수정내용' where id = 2;
 update child3 set c1='수정내용' where id = 2;
 update child3 set c1='수정내용', c2='ㅎㅎㅎ' where id = 3;
+
+
+-- 연습문제
+drop table if exists bookTable1;
+create table booktable1(
+	id bigint primary key auto_increment,
+	b_bookname varchar(20),
+    b_publisher varchar(20),
+    b_price int
+);
+select * from bookTable1;
+insert into bookTable1(b_bookname,b_publisher,b_price)values('축구역사','좋은출판사',7000);
+insert into bookTable1(b_bookname,b_publisher,b_price)values('축구 리포트','나무출판사',13000);
+insert into bookTable1(b_bookname,b_publisher,b_price)values('축구를 알려주마','대한출판사',22000);
+insert into bookTable1(b_bookname,b_publisher,b_price)values('베구의 바이블','대한출판사',35000);
+insert into bookTable1(b_bookname,b_publisher,b_price)values('피겨 교과서','좋은출판사',8000);
+insert into bookTable1(b_bookname,b_publisher,b_price)values('피칭의 단계별기술','좋은출판사',6000);
+insert into bookTable1(b_bookname,b_publisher,b_price)values('야구의 추억 이야기','나이스미디어',20000);
+insert into bookTable1(b_bookname,b_publisher,b_price)values('야구 읽어주는 남자','나이스미디어',13000);
+insert into bookTable1(b_bookname,b_publisher,b_price)values('올림픽 스토리','이야기당',7500);
+insert into bookTable1(b_bookname,b_publisher,b_price)values('olmpic history','strawbetty',13000);
+
+
+drop table if exists customerTable1;
+create table customerTable1(
+	id bigint primary key auto_increment,
+	c_name varchar(20),
+    c_address varchar(20),
+    c_phone varchar(20)
+);
+select * from customerTable1;
+insert into customerTable1(c_name,c_address,c_phone)values('손흥민','영국 런던','000-5000-0001');
+insert into customerTable1(c_name,c_address,c_phone)values('김연아','대한민국 서울',000-6000-0001);
+insert into customerTable1(c_name,c_address,c_phone)values('김연경','대한민국 서울',000-7000-0001);
+insert into customerTable1(c_name,c_address,c_phone)values('류현진','캐나다 토론토','000-8000-0001');
+insert into customerTable1(c_name,c_address,c_phone)values('이강인','프랑스 파리',null);
+
+drop table ordersTable1;
+create table ordersTable1(
+	id bigint primary key auto_increment,
+	cutomer_id bigint,
+    book_id bigint,
+    o_saleprice int,
+    o_orderdate date,
+	constraint fk_cutomer_id foreign key(cutomer_id) references customerTable1(id),
+    constraint fk_book_id foreign key(book_id) references bookTable1(id)
+);
+select * from ordersTable1;
+insert into ordersTable1(cutomer_id,book_id,o_saleprice,o_orderdate)values(1,1,'6000','2023-07-01');
+insert into ordersTable1(cutomer_id,book_id,o_saleprice,o_orderdate)values(1,3,'21000','2023-07-03');
+insert into ordersTable1(cutomer_id,book_id,o_saleprice,o_orderdate)values(2,5,'8000','2023-07-03');
+insert into ordersTable1(cutomer_id,book_id,o_saleprice,o_orderdate)values(3,6,'6000','2023-07-04');
+insert into ordersTable1(cutomer_id,book_id,o_saleprice,o_orderdate)values(4,7,'20000','2023-07-05');
+insert into ordersTable1(cutomer_id,book_id,o_saleprice,o_orderdate)values(1,2,'12000','2023-07-07');
+insert into ordersTable1(cutomer_id,book_id,o_saleprice,o_orderdate)values(4,8,'13000','2023-07-07');
+insert into ordersTable1(cutomer_id,book_id,o_saleprice,o_orderdate)values(3,10,'12000','2023-07-08');
+insert into ordersTable1(cutomer_id,book_id,o_saleprice,o_orderdate)values(2,10,'7000','2023-07-09');
+insert into ordersTable1(cutomer_id,book_id,o_saleprice,o_orderdate)values(3,8,'13000','2023-07-10');
+
+
+
+
+
+
+
+
