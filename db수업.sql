@@ -487,7 +487,8 @@ insert into member6(member_email, member_password) values('bb@bb.com','1234');
 
 -- ----------------------------
 -- 참조관계 
-drop table parent1;
+-- constraint fk_child1 foreign key(p_id) references parent1(id)
+drop table if exists parent1;
 create table parent1(
 	id bigint primary key,
     p1 varchar (10),
@@ -526,5 +527,78 @@ delete from parent1 where id = 4;
 delete from child1 where id = 2;
 
 
+-- on delete cascade
+drop table if exists parent2;
+create table parent2(
+	id bigint primary key,
+    p1 varchar (10),
+    p2 varchar (20)
+);
+
+drop table child2;
+create table child2(
+	id bigint primary key,
+    c1 varchar (10),
+    c2 varchar (20),
+    p_id bigint, -- 참조할 컬럼 
+    -- 외래키 지정 (P_id 컬럼을 parent1 테이블의 id 컬럼을 참조하도록함)
+    -- 부모데이터 삭제시 자식데이터도 삭제 ... 테이블을 통체로 지울시는 예외다 한줄한줄 지우는 것만 가능
+    constraint fk_child2 foreign key(p_id) references parent2(id) on delete cascade
+);
+
+insert into parent2(id,p1,p2) values(1,'aa','aa');
+insert into parent2(id,p1,p2) values(2,'bb','bb');
+insert into parent2(id,p1,p2) values(3,'cc','cc');
+insert into parent2(id,p1,p2) values(4,'dd','dd');
+select * from parent2;
+
+-- 부모가 가지고 있는 값이 아닐경우 에러발생...예) id 값이 1,2,3 이 아닐경우
+insert child2(id, c1, c2, p_id) values(1,'aaa','aaa',1);
+-- 부모 id 컬럼에 없는 값을 P-id에 저장 
+insert child2(id, c1, c2, p_id) values(2,'bbb','bbb',2);
+insert child2(id, c1, c2, p_id) values(3,'ccc','ccc',3); 
+insert child2(id, c1, c2, p_id) values(4,'ddd','ddd',5); 
+select * from child2;
+
+delete from parent2 where id = 3;
 
 
+--  on delete set null
+drop table if exists parent3;
+create table parent3(
+	id bigint primary key,
+    p1 varchar (10),
+    p2 varchar (20)
+);
+
+drop table child3;
+create table child3(
+	id bigint primary key,
+    c1 varchar (10),
+    c2 varchar (20),
+    p_id bigint, -- 참조할 컬럼 
+    -- 외래키 지정 (P_id 컬럼을 parent1 테이블의 id 컬럼을 참조하도록함)
+    -- 부모데이터 삭제시 자식데이터는 유지되지만 참조컬럼은 null 이됨
+    constraint fk_child3 foreign key(p_id) references parent3(id) on delete set null
+);
+
+insert into parent3(id,p1,p2) values(1,'aa','aa');
+insert into parent3(id,p1,p2) values(2,'bb','bb');
+insert into parent3(id,p1,p2) values(3,'cc','cc');
+insert into parent3(id,p1,p2) values(4,'dd','dd');
+select * from parent3;
+delete from parent3 where id = 1; -- 참조하는 컬럼만 null상태로 만든다...select * from child3 에서 확인 가능
+
+-- 부모가 가지고 있는 값이 아닐경우 에러발생...예) id 값이 1,2,3 이 아닐경우
+insert child3(id, c1, c2, p_id) values(1,'aaa','aaa',1);
+-- 부모 id 컬럼에 없는 값을 P-id에 저장 
+insert child3(id, c1, c2, p_id) values(2,'bbb','bbb',2);
+insert child3(id, c1, c2, p_id) values(3,'ccc','ccc',3); 
+insert child3(id, c1, c2, p_id) values(4,'ddd','ddd',5); 
+select * from child3;
+
+
+-- 수정쿼리
+-- update child3 set c1='수정내용' where id = 2;
+update child3 set c1='수정내용' where id = 2;
+update child3 set c1='수정내용', c2='ㅎㅎㅎ' where id = 3;
