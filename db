@@ -753,7 +753,7 @@ select c.c_name from customer c, orders o where o.customer_id=c.id group by c.c_
 select c_name from customer where id in(select customer_id from orders);
 -- 32. 도서의 가격(PRICE)과 판매가격(SALEPRICE)의 차이가 가장 많이 나는 주문 조회
 select * from book b, orders o where o.book_id = b.id 
-	 and o.o_saleprice - b.b_price = (select max(o.o_saleprice - b.b_price)from book b, orders o where o.book_id = b.id);
+	 and b.b_price - o.o_saleprice = (select max(b.b_price - o.o_saleprice)from book b, orders o where o.book_id = b.id);
 select b_price from book; 
 select o_saleprice from orders;
 -- 33. 고객별 평균 구매 금액이 도서의 판매 평균 금액 보다 높은 고객의 이름 조회 
@@ -762,8 +762,112 @@ select c.c_name from book b, orders o, customer c
 		group by o.customer_id having avg(o.o_saleprice) > (select avg(o_saleprice) from orders);
 select customer_id,avg(o_saleprice) from orders group by customer_id;
 select avg(o_saleprice) from orders;
--- 34. 고객번호가 5인 고객의 주소를 대한민국 인천으로 변경 
-update customer set c_address = '대한민국' where id = 5;
+-- 34. 고객번호가 5인 고객의 주소를 대한민국 인천으로 변경(수정) 
+update customer set c_address = '대한민국 인천' where id = 5;
 select * from customer where id = 5;
 -- 35. 김씨 성을 가진 고객이 주문한 총 판매액 조회
 select sum(o.o_saleprice) from customer c, orders o where o.customer_id = c.id and c.c_name like '김%' ;
+select sum(o_saleprice) from orders where customer_id in(select id from customer where c_name like '김%');
+
+-- ----
+-- 연습필요
+-- 31. 책을 구매한 이력이 있는 고객의 이름을 조회 (서브쿼리사용...조인하지말것)
+-- 32. 도서의 가격(PRICE)과 판매가격(SALEPRICE)의 차이가 가장 많이 나는 주문 조회
+-- 33. 고객별 평균 구매 금액이 도서의 판매 평균 금액 보다 높은 고객의 이름 조회
+
+-- 31. 책을 구매한 이력이 있는 고객의 이름을 조회 (서브쿼리사용...조인하지말것)
+select customer_id from orders;
+select c_name from customer where id in (select customer_id from orders );
+-- 32. 도서의 가격(PRICE)과 판매가격(SALEPRICE)의 차이가 가장 많이 나는 주문 조회
+
+-- ----
+-- alter: 테이블의 구조를 변경할 때 (컬럼이름 변경, 타입 변경, 컬럼삭제, 제약조건 추가 등)
+create table  student(
+	id bigint,
+    s_name varchar(20),
+    s_mobile int 
+);
+-- 테이블의 구조 확인 
+desc student;
+desc book;
+-- 기존 컬럼에 제약조건 추가
+alter table student add constraint primary key(id);
+-- 기존 컬럼 타입 변경
+alter table student modify s_mobile varchar(30);
+-- 컬럼 추가
+alter table student add s_major varchar(30);
+-- 컬럼 이름 변경
+alter table student change s_mobile s_phone varchar(30);
+-- 컬럼 삭제
+alter table student drop s_major;
+
+
+-- ----
+-- ERD 생성
+drop table if exists member_table;
+drop table if exists category_table;
+drop table if exists board_table;
+drop table if exists board_file_table;
+drop table if exists comment_table;
+drop table if exists good_table;
+
+create table member_table (
+	id bigint primary key auto_increment,
+    member_email varchar(30) not null,
+	member_name varchar(20) not null,
+    member_password varchar(20) not null
+);
+
+create table category_table(
+	id bigint primary key auto_increment,
+    category_name varchar(20)
+);
+
+
+create table board_table(
+	id bigint primary key auto_increment,
+    board_title varchar(50) not null,
+	board_writer varchar(30) not null,
+    board_contents varchar(500),
+    board_hits int,
+    board_created_at datetime default now(),
+    board_updated_at datetime default now(),
+    board_file_attached int,
+    member_id bigint,
+    category_id bigint,
+    constraint fk_bord_to_member foreign key(member_id) references member_table(id),
+	constraint fk_bord_to_category foreign key(category_id) references category_table(id)
+);
+
+
+create table board_file_table(
+	id bigint primary key auto_increment,
+    orginal_file_name varchar(100),
+	stored_file_name varchar(100),
+    board_id bigint,
+    constraint fk_board_file_to_board foreign key(board_id) references board_table(id)
+);
+
+
+create table comment_table(
+	id bigint primary key auto_increment,
+    comment_writer varchar(30) not null,
+    comment_contents varchar(200) not null,
+    comment_created_at datetime default now(),
+    board_id bigint,
+    member_id bigint,
+    constraint fk_comment_to_board foreign key(board_id) references board_table(id),
+    constraint fk_comment_to_member foreign key(member_id) references member_table(id)
+);
+
+
+create table good_table(
+	id bigint primary key auto_increment,
+    comment_id bigint,
+    member_id bigint,
+    constraint fk_good_to_comment foreign key(comment_id) references comment_table(id),
+    constraint fk_good_to_member foreign key(member_id) references member_table(id)
+);
+
+
+
